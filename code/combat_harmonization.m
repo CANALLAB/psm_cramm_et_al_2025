@@ -5,12 +5,12 @@
 %%%%%%%%%%%%%%%%%%%%%%% Turn your nifti files into a vector 
 
 % Path to the CSV file containing participant information - subID, batch and mod info
-covariates_file = '/media/johnanderson/Expansion1/Veronica/Nathan_Brain/participants_harmonization_info.csv';
+covariates_file = '/path/to/your/file/';
 
 % Read the entire CSV file into a table
 covariate_data = readtable(covariates_file);
 
-% Extract participant IDs, sex, batch, group, and age information
+% Extract participant IDs, sex, batch (scanner site), group, and age information
 p_ids = covariate_data.ID;  % Column for participant IDs
 sex = covariate_data.sex;    % Column for sex
 batch = covariate_data.batch; % Column for batch
@@ -24,10 +24,12 @@ gm_matrix = [];
 % Generate NIfTI filenames and load the data
 for i = 1:length(p_ids)
     %need to change naming convention for each study
+    %this is an example of how I extracted the participant ID from my file names
     gm_nii_file_name = strcat('mwp1', p_ids{i}, '_ses-1_T1w.nii');
     file_names{i} = gm_nii_file_name;
     disp(gm_nii_file_name);
 
+    % here you are loading in each nifti, converting it to a vector, and adding it to the matrix that will get harmonized
     gm_nii = load_nii(gm_nii_file_name);  % Load the NIfTI file
     gm_data = gm_nii.img;                  % Get the GM data as a 3D matrix
     gm_vector = gm_data(:);                 % Flatten the 3D matrix into a 1D vector
@@ -36,7 +38,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%% Removing constant values
 
-% Remove all constant rows across all participants
+% Remove all constant rows across all participants - this is done as a requirement for the software 
 const_rows = range(gm_matrix, 2) == 0;  % Logical vector for constant rows
 const_values = gm_matrix(const_rows, :);  % Store constant values
 gm_matrix_no_const = gm_matrix(~const_rows, :);  % Remove constant rows
@@ -52,7 +54,7 @@ covariates_matrix = table2array(covariate_data(:, {'age', 'sex'}));
 
 %last arguement, 1= parametric, 0=non-parametric
 
-%%%%%%%%%%%%%%%%%%%%%%% Add constant values back in
+%%%%%%%%%%%%%%%%%%%%%%% Add constant values back in that were removed earlier
 
 % Initialize the harmonized matrix
 gm_harmonized_with_const = zeros(size(gm_matrix));

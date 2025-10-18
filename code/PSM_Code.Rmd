@@ -1,0 +1,51 @@
+---
+title: "PSM Code"
+author: "Veronica J. Cramm"
+date: "2024-10-30"
+output: pdf_document
+---
+
+```{r}
+#Import dataframe
+library(readr)
+
+#load your csv file that contains group/demographic/site/and quality control information for each participant
+data <- read.csv("insert/path/to/csv/")
+
+#make group coded as 0 for control, 1 for patient - Only used for ABIDE
+data$group <- ifelse(data$group == 2, 0, 1)
+
+#import libraries for matching
+library(MatchIt)
+library(lmtest)
+library(sandwich)
+
+#code to created a matched dataset based on IQR, Euler Characteristic and Defect Size
+match_obj_IQR <- matchit(group ~ IQR + Euler + Defect_Size,
+                     data = data, method = "optimal", distance ="glm",
+                     ratio = 1, discard = "both",
+                     replace = FALSE)
+
+summary(match_obj_IQR)
+
+# to save the matched R-studio object to access at a later date
+saveRDS(match_obj_IQR, file = "name_of_file.rds")
+#access the saved object from line 33
+loaded_object <- readRDS("your_file.rds")
+
+#Plot the results of matching
+plot(match_obj_IQR, type = "jitter", interactive = FALSE)
+plot(summary(match_obj_IQR), abs = FALSE)
+
+#to view discarded participants
+match_obj_IQR$discarded
+
+#to save your matched data, first extract it from the object
+matched_data <- match.data(match_obj_IQR)
+#then save it to a csv for later use
+write.csv(matched_data, "matched_data_filename.csv")
+```
+
+
+
+
